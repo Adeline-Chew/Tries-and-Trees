@@ -2,7 +2,6 @@
 Student ID: 31164110
 Name: Adeline Chew Yao Yi
 """
-import math
 
 class SequenceDatabase:
     """
@@ -26,15 +25,23 @@ class SequenceDatabase:
         """
         current = self.root
         freq, node = self.addSequence_aux(current, s)
-        if current.most_freq[1] < freq:
+        index = ord(s[0]) - ord('A') + 1
+        if freq > current.most_freq[1]:
             current.most_freq = (node, freq)
-        elif current.most_freq[1] == freq:
-            if s[0] < current.most_freq[0].data[0] or \
-                (s[0] == current.most_freq[0].data[0] and len(s[0]) < len(current.most_freq[0].data[0])):
-                current.most_freq = (node, freq)
+        elif current.most_freq[0].data[0] == node.data[0]:
+            current.most_freq = current.links[index].most_freq
+        elif freq == current.most_freq[1]:
+            for x in range(5):
+                if x == index:
+                    pass
+                if current.links[x] is not None and current.links[x].most_freq[1] >= freq:
+                    h_index = x
+                    break
+            if h_index is not None and current.links[h_index].most_freq[1] >= freq:
+                current.most_freq = current.links[h_index].most_freq
             
     
-    def addSequence_aux(self, current, s, i=0, value=1):
+    def addSequence_aux(self, current, s, i=0):
         """ 
         Use recursion to form a tries, base case when i reach terminal node $.
         Each node stores the frequency of the time it has been added in,
@@ -47,11 +54,11 @@ class SequenceDatabase:
         Returns:
             [(Int, Node)]: [Return the most frequency count and the represented node]
         """
-        pre = current
         if i == len(s): # means index i reach $
             if current.links[0] is not None: # the word exists
                 current = current.links[0]
                 current.freq += 1
+                current.most_freq = (current, current.freq)
                 i += 1
                 return current.freq, current
             else: # the word doesn't exist, create a new node for $
@@ -62,6 +69,7 @@ class SequenceDatabase:
             return 1, current
         else:
             index = ord(s[i]) - ord('A') + 1
+            pre = current
             # if path exists
             if current.links[index] is not None:
                 current = current.links[index]
@@ -70,19 +78,22 @@ class SequenceDatabase:
                 current.links[index] = Node()
                 current = current.links[index]
             i += 1
-            res = self.addSequence_aux(current, s, i)
-            freq, node = res[0], res[1]
+            freq, node  = self.addSequence_aux(current, s, i)
         # create a short path from current to the most freq leaf
-        i -= 1
-        if current.most_freq[1] < freq:
+        h_index = None
+        if freq > current.most_freq[1]:
             current.most_freq = (node, freq)
-        if i > 0 and pre.most_freq[1] == freq and i < len(pre.most_freq[0].data):
-            if s[i] <= pre.most_freq[0].data[i]:
-                pre.most_freq = (node, freq)
-        elif i == 0 and current.most_freq[1] == freq and i < len(current.most_freq[0].data):
-            if s[i] <= current.most_freq[0].data[i]:
-                current.most_freq = (node, freq)
+        elif freq == current.most_freq[1]:
+            for x in range(5):
+                if x == index:
+                    pass
+                if current.links[x] is not None and current.links[x].most_freq[1] >= freq:
+                    h_index = x
+                    break
+            if h_index is not None and current.links[h_index].most_freq[1] >= freq:
+                current.most_freq = current.links[h_index].most_freq
         return freq, node
+
     
     def query(self, q):
         """
@@ -94,15 +105,7 @@ class SequenceDatabase:
         Returns:
             [String]: [Most frequent string that has q as prefix]
         """
-        res = self.query_aux(q)
-        if res is not None:
-            return res
-        return None
-        
-    def query_aux(self, q):
-        current = self.root
-        if len(q) == 0:
-            return current.most_freq[0].data
+        current = self.root 
         for char in q:
             index = ord(char) - ord('A') + 1
             # if path exists
@@ -111,41 +114,11 @@ class SequenceDatabase:
             # if path doesn't exist
             else:
                 return None
-        highest, h_index = 0, 0
-        for i in range(5):
-            if current.links[i] is not None:
-                freq = current.links[i].most_freq[1]
-                if freq > highest:
-                    highest = freq
-                    h_index = i
-        current = current.links[h_index]
-        return current.most_freq[0].data
-
-    
-    # def query(self, q):
-    #     """
-    #     This method returns the string stored in database which have the
-    #     highest frequency than other string with q as the prefix.
-    #     Complexity: O(len(q)) where q is the input query string
-    #     Args:
-    #         q ([String]): [Input prefix string]
-    #     Returns:
-    #         [String]: [Most frequent string that has q as prefix]
-    #     """
-    #     current = self.root 
-    #     for char in q:
-    #         index = ord(char) - ord('A') + 1
-    #         # if path exists
-    #         if current.links[index] is not None:
-    #             current = current.links[index]
-    #         # if path doesn't exist
-    #         else:
-    #             return None
-    #     # path doesn't exist
-    #     if current == None or current.most_freq[0] == None :
-    #         return None
-    #     else:
-    #         return current.most_freq[0].data
+        # path doesn't exist
+        if current == None or current.most_freq[0] == None :
+            return None
+        else:
+            return current.most_freq[0].data
             
             
 class Node:
