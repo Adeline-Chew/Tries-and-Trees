@@ -69,7 +69,6 @@ class SequenceDatabase:
             return 1, current
         else:
             index = ord(s[i]) - ord('A') + 1
-            pre = current
             # if path exists
             if current.links[index] is not None:
                 current = current.links[index]
