@@ -1,5 +1,4 @@
 
-
 class SequenceDatabase:
     def __init__(self):
         self.root = Node()
@@ -10,16 +9,13 @@ class SequenceDatabase:
         freq, node = self.addSequence_aux(current, s)
         if current.most_freq[1] < freq:
             current.most_freq = (node, freq)
-        res = self.checkFreq(node, self.root, s)
-        # if current.most_freq[1] < freq:
-        #     current.most_freq = (node, freq)
-        if node.data[0] < current.most_freq[0].data[0] and freq > current.most_freq[1]:
-            current.most_freq = (node, freq)
-        elif res is not None and res[0].data[0] <= current.most_freq[0].data[0]:
-            if res[1] >= current.most_freq[1]:
-                current.most_freq = res
+        elif current.most_freq[1] == freq:
+            if s[0] < current.most_freq[0].data[0] or \
+                (s[0] == current.most_freq[0].data[0] and len(s[0]) < len(current.most_freq[0].data[0])):
+                current.most_freq = (node, freq)
 
     def addSequence_aux(self, current, s, i=0):
+        pre = current
         if i == len(s): # means index i reach $
             if current.links[0] is not None: # the word exists
                 current = current.links[0]
@@ -29,10 +25,12 @@ class SequenceDatabase:
             else: # the word doesn't exist, create a new node for $
                 current.links[0] = Node(s)
                 current = current.links[0]
+                current.most_freq = (current, 1)
                 i += 1
             return 1, current
         else:
             index = ord(s[i]) - ord('A') + 1
+            pre = current
             # if path exists
             if current.links[index] is not None:
                 current = current.links[index]
@@ -44,36 +42,19 @@ class SequenceDatabase:
             res = self.addSequence_aux(current, s, i)
             freq, node = res[0], res[1]
         # create a short path from current to the most freq leaf
+        i -= 1
         if current.most_freq[1] < freq:
             current.most_freq = (node, freq)
+        if i > 0 and pre.most_freq[1] == freq and i < len(pre.most_freq[0].data):
+            if s[i] <= pre.most_freq[0].data[i]:
+                pre.most_freq = (node, freq)
+        elif i == 0 and current.most_freq[1] == freq and i < len(current.most_freq[0].data):
+            if s[i] <= current.most_freq[0].data[i]:
+                current.most_freq = (node, freq)
         return freq, node
     
-    def checkFreq(self, node, current, s, i=0):
-        if i == len(s):
-            current.most_freq = (node, node.freq)
-            return (node, node.freq)
-        index = ord(s[i]) - ord('A') + 1
-        if i == len(current.most_freq[0].data):
-            return current.most_freq
-        elif node.freq == current.most_freq[1]:
-            current = current.links[index]
-            if node.data[i] == current.most_freq[0].data[i]:
-                if i == len(s):
-                    current.most_freq = (node, node.freq)
-                    return (node, node.freq)
-                else:
-                    res = self.checkFreq(node, current, s, i + 1)
-                    if res is not None:
-                        current.most_freq = res
-                    return res
-        elif node.data[i] < current.most_freq[0].data[i]:
-            current.most_freq = (node, node.freq)
-            return (node, node.freq)
-        else:
-            res = self.checkFreq(node, current, s, i + 1)
-            if res is not None:
-                current.most_freq = res
-            return res
+    # def checkFreq(self, node, current, s, i=0):
+        
                 
         
 
@@ -88,7 +69,15 @@ class SequenceDatabase:
         Returns:
             [String]: [Most frequent string that has q as prefix]
         """
-        current = self.root 
+        res = self.query_aux(q)
+        if res is not None:
+            return res
+        return None
+        
+    def query_aux(self, q):
+        current = self.root
+        if len(q) == 0:
+            return current.most_freq[0].data
         for char in q:
             index = ord(char) - ord('A') + 1
             # if path exists
@@ -97,11 +86,14 @@ class SequenceDatabase:
             # if path doesn't exist
             else:
                 return None
-        # path doesn't exist
-        if current == None or current.most_freq[0] == None :
-            return None
-        else:
-            return current.most_freq[0].data
+        highest, h_index = 0, 0
+        for i in range(5):
+            if current.links[i] is not None:
+                freq = current.links[i].most_freq[1]
+                if freq > highest:
+                    highest = freq
+                    h_index = i
+        return current.links[h_index].most_freq[0].data
             
             
     
@@ -114,9 +106,13 @@ class Node:
      
 db = SequenceDatabase()
 # ls = ['DADDCCD', 'AACABDB', 'BCBBDAB', 'CBA', 'A', 'CDBBDCCCC', 'ABADBCDACB', 'CAAAAAADDB', 'CBBDA', 'BCCD', 'BDDBDABABC', 'DD', 'BADCCADBD', 'C', 'AD', 'ADDCDACBC', 'DABCD']
-ls = ['ABCACDBBD', 'BDDBAD', 'ACDDC', 'DDACCCABDB', 'DCADC', 'DDDABAABD', 'ACCAB', 'BBACBBDBAB', 'CBAADBAABC']
+ls = ['CBCBB', 'CBBDCB']
 for i in ls:
     db.addSequence(i)
-print(db.query("AC")) # ans = ACCAB 
+print(db.query("")) # ans = 
 
-
+db1 = SequenceDatabase()
+ls = ['A', 'BC', 'DDAD', 'AAD', 'BDCBBAAB', 'ADBD', 'B', 'ABDBBBA', 'DACCCCBBD']
+for i in ls:
+    db1.addSequence(i)
+print(db1.query("")) # ans = A
