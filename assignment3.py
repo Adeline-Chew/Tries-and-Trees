@@ -30,7 +30,7 @@ class SequenceDatabase:
 
     def addSequence_aux(self, current, s, i=0):
         """ 
-        Use recursion to form a tries, base case when i reach terminal node $.
+        Use recursion to form a trie, base case when i reach terminal node $.
         Each node stores the frequency of the time it has been added in,
         each node also stores a links to its most frequent child node.
         Complexity: O(len(s)) where s is the input string
@@ -134,7 +134,7 @@ class OrfFinder:
 
     def __init__(self, genome):
         """Constructor of class OrfFinder.
-        Complexity: O(1)
+        Complexity: O(N^2) where N is the length of input string genome.
         Args:
             genome ([String]): [Input string that contains only A,B,C,D]
         """
@@ -229,18 +229,17 @@ class OrfFinder:
         current = self.find_indices(start)
         s_subs = current.data if current is not None else []
         current = self.find_indices(end)
-        temp = current.data if current is not None else []
-        if len(s_subs) == 0 or len(temp) == 0 or current.data is None:
+        e_subs = current.data if current is not None else []
+        if len(s_subs) == 0 or len(e_subs) == 0 or current.data is None:
             return []
-        e_subs = []
-        for index in temp:  # append the index of the prefix of the 'end' in the genome
-            e_subs.append(index + len(end) - 1)
         i, k = 0, 0
         indices = []
         # Create possible combination of start and end
         while i < len(s_subs) and k < len(e_subs):
-            if s_subs[i] + len(start) - 1 < e_subs[k] and s_subs[i] + len(start) - 1 < e_subs[k] - len(end) + 1:
-                indices.append((s_subs[i], e_subs[k]))
+            if s_subs[i] + len(start) - 1 < (e_subs[k] + len(end) - 1) \
+                and s_subs[i] + len(start) - 1 < e_subs[k]:
+                    
+                indices.append((s_subs[i], (e_subs[k] + len(end) - 1)))
             k += 1
             if k == len(e_subs):
                 if s_subs[i] > e_subs[-1]:  # terminate earlier
