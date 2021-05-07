@@ -236,9 +236,7 @@ class OrfFinder:
         indices = []
         # Create possible combination of start and end
         while i < len(s_subs) and k < len(e_subs):
-            if s_subs[i] + len(start) - 1 < (e_subs[k] + len(end) - 1) \
-                and s_subs[i] + len(start) - 1 < e_subs[k]:
-                    
+            if s_subs[i] + len(start) - 1 < e_subs[k]:
                 indices.append((s_subs[i], (e_subs[k] + len(end) - 1)))
             k += 1
             if k == len(e_subs):
